@@ -1,0 +1,133 @@
+services:
+  mongo:
+    image: mongo
+    container_name: mongo
+    restart: always
+    volumes:
+      - ./data/mongo:/data/db
+    expose:
+      - "27017"
+
+  tp-vue-api:
+    build:
+      context: ./B3dev-TP_VUE/express-project
+      dockerfile: deployment/Dockerfile
+    container_name: tp-vue-api
+    ports:
+      - "3003:3000"
+    environment:
+      - NODE_ENV=test
+    depends_on:
+      - mongo
+
+  tp-vue-front:
+    build:
+      context: ./B3dev-TP_VUE/my-project
+      dockerfile: deployment/Dockerfile
+    container_name: tp-vue-front
+    ports:
+      - "8080:80"
+
+  sbv-api:
+    build:
+      context: ./SaintBarthVolley/saintBarthVolleyApp/backend
+      dockerfile: Dockerfile
+    container_name: sbv-api
+    ports:
+      - "3006:5000"
+    env_file:
+      - ./SaintBarthVolley/saintBarthVolleyApp/backend/.env
+    volumes:
+      - ./SaintBarthVolley/saintBarthVolleyApp/backend/public/uploads:/usr/src/app/public/uploads
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  sbv-front:
+    build:
+      context: ./SaintBarthVolley/saintBarthVolleyApp/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_BASE_PATH: /saintbarthvolley
+        NEXT_PUBLIC_API_URL: /saintbarthvolley
+    container_name: sbv-front
+    ports:
+      - "3007:3000"
+    restart: unless-stopped
+
+  lucky7-back:
+    build:
+      context: ./Lucky7/lucky7-app/backend
+      dockerfile: Dockerfile
+    container_name: lucky7-back
+    ports:
+      - "3009:4000"
+    env_file:
+      - ./Lucky7/lucky7-app/backend/.env
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  lucky7-front:
+    build:
+      context: ./Lucky7/lucky7-app/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_BASE_PATH: /lucky7
+    container_name: lucky7-front
+    ports:
+      - "3008:3000"
+    restart: unless-stopped
+
+  clb-back:
+    build:
+      context: ./CollegeLaBoussole/collegeLaBoussoleApp/backend
+      dockerfile: Dockerfile
+    container_name: clb-back
+    ports:
+      - "3010:5000"
+    env_file:
+      - ./CollegeLaBoussole/collegeLaBoussoleApp/backend/.env
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  clb-front:
+    build:
+      context: ./CollegeLaBoussole/collegeLaBoussoleApp/frontend
+      dockerfile: Dockerfile
+      args:
+        NEXT_BASE_PATH: /collegelaboussole
+        NEXT_PUBLIC_API_URL: /collegelaboussole
+    container_name: clb-front
+    ports:
+      - "3011:3000"
+    restart: unless-stopped
+
+  cinemap:
+    build:
+      context: ./B3dev-TP_framework_php/cinemap-app
+      dockerfile: deployment/Dockerfile
+    image: www-cinemap
+    container_name: cinemap
+    ports:
+      - "3012:80"
+    volumes:
+      - ./data/cinemap/database.sqlite:/var/www/html/database/database.sqlite
+    env_file:
+      - ./B3dev-TP_framework_php/cinemap-app/.env
+    restart: unless-stopped
+
+  vps-monitor:
+    build: ./VPS-monitor/vps-monitor-app
+    container_name: vps-monitor
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "3020:3000"
+    environment:
+      - PORT=3000
+      - BASE_URL=http://172.18.0.1
+    env_file:
+      - ./VPS-monitor/.env
+    restart: unless-stopped
